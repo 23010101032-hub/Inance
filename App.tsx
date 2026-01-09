@@ -148,8 +148,9 @@ const App: React.FC = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transition-all duration-500 ease-in-out transform lg:translate-x-0 lg:static lg:inset-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <div className="flex min-h-screen bg-slate-50">
+      {/* Sidebar - Sticky on larger screens */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transition-all duration-500 ease-in-out transform lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full safe-top safe-bottom">
           <div className="p-6">
             <div className="flex items-center space-x-3 group cursor-pointer">
@@ -160,11 +161,11 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <nav className="flex-1 px-4 space-y-2 overflow-y-auto scrollbar-hide">
+          <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
             {navItems.map((item, idx) => (
               <button
                 key={item.id}
-                onClick={() => { setActiveView(item.id as ViewType); setSidebarOpen(false); }}
+                onClick={() => { setActiveView(item.id as ViewType); setSidebarOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 style={{ animationDelay: `${idx * 100}ms` }}
                 className={`flex items-center w-full px-4 py-3 text-sm font-medium transition-all duration-300 rounded-lg group animate-in fade-in slide-in-from-left-4 ${activeView === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
               >
@@ -200,6 +201,7 @@ const App: React.FC = () => {
         </div>
       </aside>
 
+      {/* Overlay for mobile sidebar */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm animate-in fade-in"
@@ -207,8 +209,9 @@ const App: React.FC = () => {
         />
       )}
 
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white border-b border-slate-200 px-4 pt-3 lg:px-8 z-30 transition-shadow duration-300 shadow-sm safe-top">
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0">
+        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 pt-3 lg:px-8 shadow-sm safe-top">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3">
             <div className="flex items-center">
               <button onClick={() => setSidebarOpen(true)} className="p-2.5 mr-4 text-slate-600 lg:hidden hover:bg-slate-100 rounded-xl transition-colors active:scale-90">
@@ -243,7 +246,8 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8 scrollbar-hide safe-bottom">
+        {/* Content Area - Natural Scroll */}
+        <div className="p-4 lg:p-8 safe-bottom">
           <div className="max-w-7xl mx-auto pb-24 lg:pb-8">
             {activeView === 'dashboard' && <Dashboard state={state} />}
             {activeView === 'transactions' && <TransactionList state={state} onDelete={deleteTransaction} />}
@@ -266,6 +270,9 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+// ... Rest of the components (Onboarding, PermissionRow, TransactionModal) remain same but with scrollbar-hide removed if present ...
+// (Omitting identical code for brevity, ensuring scrolling logic is fixed)
 
 const Onboarding: React.FC<{ onComplete: (profile: UserProfile, notifsOn: boolean) => void }> = ({ onComplete }) => {
   const [step, setStep] = useState(1);
@@ -305,8 +312,8 @@ const Onboarding: React.FC<{ onComplete: (profile: UserProfile, notifsOn: boolea
   const nextStep = () => setStep(s => s + 1);
 
   return (
-    <div className="fixed inset-0 bg-slate-50 flex items-center justify-center p-4 z-[100] overflow-hidden">
-      <div className="max-w-xl w-full bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden relative">
+    <div className="fixed inset-0 bg-slate-50 flex items-center justify-center p-4 z-[100] overflow-y-auto">
+      <div className="max-w-xl w-full bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden relative my-auto">
         <div className="h-2 bg-slate-100 w-full absolute top-0">
           <div 
             className="h-full bg-indigo-600 transition-all duration-700 ease-out" 
@@ -485,8 +492,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ initialType, onClos
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300 border border-white/20">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
+      <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300 border border-white/20 my-auto">
         <div className={`p-6 border-b border-slate-100 flex justify-between items-center ${type === 'income' ? 'bg-emerald-50/50' : 'bg-rose-50/50'}`}>
           <h3 className="text-xl font-bold text-slate-800">New {type === 'income' ? 'Income' : 'Expense'} Entry</h3>
           <button onClick={onClose} className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-white rounded-full transition-all duration-300 active:scale-90">
