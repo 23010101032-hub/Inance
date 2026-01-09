@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   LayoutDashboard, 
@@ -24,15 +23,15 @@ import {
   CheckCircle2,
   ChevronRight
 } from 'lucide-react';
-import { AppState, Transaction, TransactionType, ViewType, UserProfile, Categories } from './types';
-import { INITIAL_CATEGORIES, INITIAL_PROFILE, CURRENCIES } from './constants';
-import Dashboard from './components/Dashboard';
-import TransactionList from './components/TransactionList';
-import ChartsView from './components/ChartsView';
-import CategoryManager from './components/CategoryManager';
-import SettingsView from './components/SettingsView';
-import { exportToExcel, importFromExcel } from './services/excelService';
-import { getFinancialTip } from './services/geminiService';
+import { AppState, Transaction, TransactionType, ViewType, UserProfile, Categories } from './types.ts';
+import { INITIAL_CATEGORIES, INITIAL_PROFILE, CURRENCIES } from './constants.ts';
+import Dashboard from './components/Dashboard.tsx';
+import TransactionList from './components/TransactionList.tsx';
+import ChartsView from './components/ChartsView.tsx';
+import CategoryManager from './components/CategoryManager.tsx';
+import SettingsView from './components/SettingsView.tsx';
+import { exportToExcel, importFromExcel } from './services/excelService.ts';
+import { getFinancialTip } from './services/geminiService.ts';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => {
@@ -58,25 +57,21 @@ const App: React.FC = () => {
   const [dailyTip, setDailyTip] = useState<string>('Loading financial wisdom...');
   const [showAddModal, setShowAddModal] = useState<TransactionType | null>(null);
 
-  // Persistence
   useEffect(() => {
     localStorage.setItem('fin_track_state', JSON.stringify(state));
   }, [state]);
 
-  // Daily Tip Fetch
   useEffect(() => {
     if (hasCompletedOnboarding) {
       getFinancialTip().then(setDailyTip);
     }
   }, [hasCompletedOnboarding]);
 
-  // Notification Reminder Logic - Set to 10 PM (22:00)
   useEffect(() => {
     if (!hasCompletedOnboarding || !notificationsEnabled) return;
 
     const reminderInterval = setInterval(() => {
       const now = new Date();
-      // Trigger at exactly 10:00 PM
       if (now.getHours() === 22 && now.getMinutes() === 0) { 
         if (Notification.permission === "granted") {
           new Notification("FinTrack Pro", {
@@ -154,7 +149,6 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar - Desktop & Drawer */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transition-all duration-500 ease-in-out transform lg:translate-x-0 lg:static lg:inset-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full safe-top safe-bottom">
           <div className="p-6">
@@ -206,7 +200,6 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* Overlay for mobile drawer */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm animate-in fade-in"
@@ -214,9 +207,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header - Fixed to support Pixel-sized viewports with notches */}
         <header className="bg-white border-b border-slate-200 px-4 pt-3 lg:px-8 z-30 transition-shadow duration-300 shadow-sm safe-top">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3">
             <div className="flex items-center">
@@ -252,7 +243,6 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {/* View Container */}
         <div className="flex-1 overflow-y-auto p-4 lg:p-8 scrollbar-hide safe-bottom">
           <div className="max-w-7xl mx-auto pb-24 lg:pb-8">
             {activeView === 'dashboard' && <Dashboard state={state} />}
@@ -264,7 +254,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Add Transaction Modal */}
       {showAddModal && (
         <TransactionModal 
           initialType={showAddModal}
@@ -277,8 +266,6 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-// --- Onboarding Component with Persistence API ---
 
 const Onboarding: React.FC<{ onComplete: (profile: UserProfile, notifsOn: boolean) => void }> = ({ onComplete }) => {
   const [step, setStep] = useState(1);
@@ -295,7 +282,6 @@ const Onboarding: React.FC<{ onComplete: (profile: UserProfile, notifsOn: boolea
       if (isPersisted) {
         setPermissions(p => ({ ...p, storage: true }));
       } else {
-        // Fallback for browsers where persist is denied but localStorage still works
         setPermissions(p => ({ ...p, storage: !p.storage }));
       }
     } else {
@@ -465,8 +451,6 @@ const PermissionRow: React.FC<{
     </div>
   </button>
 );
-
-// --- Transaction Modal Styling Persistence ---
 
 interface TransactionModalProps {
   initialType: TransactionType;

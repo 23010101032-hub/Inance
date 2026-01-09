@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,14 +9,38 @@
     <title>FinTrack Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      /**
+       * CRITICAL: Shim process.env for browser compatibility.
+       * The Gemini SDK expects process.env.API_KEY to be available.
+       */
+      window.process = {
+        env: {
+          API_KEY: "" // Will be overridden by the environment in production
+        }
+      };
+    </script>
     <style>
         body { 
             font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
         }
         /* Handle Safe Areas for devices with notches like Pixel/iPhone */
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* Ensure no horizontal scroll */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+            height: 100%;
+        }
+        #root {
+            height: 100%;
+        }
     </style>
 <script type="importmap">
 {
@@ -33,7 +56,9 @@
 }
 </script>
 </head>
-<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+<body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
+    <!-- Entry point for the React application -->
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>
