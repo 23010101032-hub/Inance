@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { AppState, Transaction } from '../types';
 import { 
@@ -54,7 +53,8 @@ const ChartsView: React.FC<ChartsViewProps> = ({ state }) => {
 
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+      // Added explicit number casting for sort arithmetic operation to satisfy TypeScript
+      .sort((a, b) => (b.value as number) - (a.value as number));
   }, [filteredTransactions]);
 
   const barData = useMemo(() => {
@@ -252,7 +252,6 @@ const ChartsView: React.FC<ChartsViewProps> = ({ state }) => {
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    // Fixed: removed textTransform from SVGProps compliant object
                     tick={{ fontSize: 10, fontWeight: '900', fill: '#cbd5e1' }} 
                     tickFormatter={(value) => String(value).toUpperCase()}
                   />

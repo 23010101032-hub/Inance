@@ -24,13 +24,18 @@ function getSummaryData(transactions: Transaction[]) {
       flatSummary.push({ "Type": "EXPENSE", "Category": cat, "Total": total });
     });
   }
+  if (summary.borrowed) {
+    Object.entries(summary.borrowed).forEach(([cat, total]) => {
+      flatSummary.push({ "Type": "DEBT", "Category": cat, "Total": total });
+    });
+  }
 
   return flatSummary;
 }
 
 export function exportToExcel(state: AppState, filteredTransactions?: Transaction[], customLabel?: string) {
   const transactionsToExport = filteredTransactions || state.transactions;
-  const { profile } = state;
+  const { profile, vaultTransactions } = state;
   const workbook = XLSX.utils.book_new();
   
   // 1. Summary Sheet
@@ -45,12 +50,28 @@ export function exportToExcel(state: AppState, filteredTransactions?: Transactio
     Amount: t.amount,
     Category: t.category,
     Date: new Date(t.date).toLocaleDateString(),
-    Description: t.description
+    Description: t.description,
+    Lender: t.borrowedFrom || '',
+    RepayDate: t.repayDate ? new Date(t.repayDate).toLocaleDateString() : ''
   }));
   const worksheet = XLSX.utils.json_to_sheet(data);
   XLSX.utils.book_append_sheet(workbook, worksheet, "All Transactions");
 
-  // 3. Category Metadata (only for full backups)
+  // 3. Vault Transactions (only for full backups)
+  if (!filteredTransactions && vaultTransactions && vaultTransactions.length > 0) {
+    const vaultData = vaultTransactions.map(t => ({
+      ID: t.id,
+      Type: t.type.toUpperCase(),
+      Amount: t.amount,
+      Category: t.category,
+      Date: new Date(t.date).toLocaleDateString(),
+      Description: t.description
+    }));
+    const vaultWorksheet = XLSX.utils.json_to_sheet(vaultData);
+    XLSX.utils.book_append_sheet(workbook, vaultWorksheet, "Vault Ledger");
+  }
+
+  // 4. Category Metadata (only for full backups)
   if (!filteredTransactions) {
     const categoriesData = [
       ...state.categories.income.map(c => ({ Type: 'Income', Name: c })),
@@ -61,7 +82,7 @@ export function exportToExcel(state: AppState, filteredTransactions?: Transactio
     XLSX.utils.book_append_sheet(workbook, catWorksheet, "Category Config");
   }
 
-  const label = customLabel || (filteredTransactions ? 'Report' : 'Backup');
+  const label = customLabel || (filteredTransactions ? 'Report' : 'Full_Backup');
   const fileName = `Inance_${label}_${profile.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
   XLSX.writeFile(workbook, fileName);
 }
@@ -108,19 +129,40 @@ export async function importFromExcel(file: File): Promise<Partial<AppState>> {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
-        const transSheet = workbook.Sheets["All Transactions"] || workbook.Sheets["Transactions"];
-        if (!transSheet) throw new Error("Invalid format: No transactions found.");
         
-        const transRaw: any[] = XLSX.utils.sheet_to_json(transSheet);
-        const transactions: Transaction[] = transRaw.map(r => ({
-          id: r.ID || Math.random().toString(36).substr(2, 9),
-          type: (r.Type || 'expense').toLowerCase() as any,
-          amount: Number(r.Amount) || 0,
-          category: r.Category || 'Other',
-          date: r.Date ? new Date(r.Date).toISOString() : new Date().toISOString(),
-          description: r.Description || ''
-        }));
+        // Restore Main Transactions
+        const transSheet = workbook.Sheets["All Transactions"] || workbook.Sheets["Transactions"];
+        let transactions: Transaction[] = [];
+        if (transSheet) {
+          const transRaw: any[] = XLSX.utils.sheet_to_json(transSheet);
+          transactions = transRaw.map(r => ({
+            id: r.ID || Math.random().toString(36).substr(2, 9),
+            type: (r.Type || 'expense').toLowerCase() as any,
+            amount: Number(r.Amount) || 0,
+            category: r.Category || 'Other',
+            date: r.Date ? new Date(r.Date).toISOString() : new Date().toISOString(),
+            description: r.Description || '',
+            borrowedFrom: r.Lender || undefined,
+            repayDate: r.RepayDate ? new Date(r.RepayDate).toISOString() : undefined
+          }));
+        }
 
+        // Restore Vault Transactions
+        const vaultSheet = workbook.Sheets["Vault Ledger"];
+        let vaultTransactions: Transaction[] = [];
+        if (vaultSheet) {
+          const vaultRaw: any[] = XLSX.utils.sheet_to_json(vaultSheet);
+          vaultTransactions = vaultRaw.map(r => ({
+            id: r.ID || Math.random().toString(36).substr(2, 9),
+            type: (r.Type || 'vault_in').toLowerCase() as any,
+            amount: Number(r.Amount) || 0,
+            category: r.Category || 'Other',
+            date: r.Date ? new Date(r.Date).toISOString() : new Date().toISOString(),
+            description: r.Description || ''
+          }));
+        }
+
+        // Restore Categories
         const catSheet = workbook.Sheets["Category Config"];
         let categories = undefined;
         if (catSheet) {
@@ -132,7 +174,11 @@ export async function importFromExcel(file: File): Promise<Partial<AppState>> {
           };
         }
 
-        resolve({ transactions, categories: categories as any });
+        resolve({ 
+          transactions, 
+          vaultTransactions,
+          categories: categories as any 
+        });
       } catch (err) {
         reject(err);
       }

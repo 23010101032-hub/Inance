@@ -63,7 +63,22 @@ const InanceLogo: React.FC<{ className?: string }> = ({ className }) => (
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => {
     const saved = localStorage.getItem('inance_state_v1');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Data Migration & Merge Strategy: 
+      // Ensures that if we add new categories or profile settings in an update, 
+      // old users don't lose their existing data but gain the new defaults.
+      return {
+        transactions: parsed.transactions || [],
+        vaultTransactions: parsed.vaultTransactions || [],
+        categories: {
+          income: Array.from(new Set([...INITIAL_CATEGORIES.income, ...(parsed.categories?.income || [])])),
+          expense: Array.from(new Set([...INITIAL_CATEGORIES.expense, ...(parsed.categories?.expense || [])])),
+          vault: Array.from(new Set([...INITIAL_CATEGORIES.vault, ...(parsed.categories?.vault || [])])),
+        },
+        profile: { ...INITIAL_PROFILE, ...parsed.profile }
+      };
+    }
     return {
       transactions: [],
       vaultTransactions: [],
@@ -296,7 +311,7 @@ const App: React.FC = () => {
               <input type="file" onChange={handleImport} className="hidden" accept=".xlsx" />
             </label>
             
-            {/* Signature Block */}
+            {/* Sidebar Signature */}
             <div className="mt-4 pt-4 border-t border-emerald-900/30 text-center group">
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-900/20 rounded-full">
                 <Heart className="w-2 h-2 text-emerald-500 fill-emerald-500 group-hover:scale-125 transition-transform" />
@@ -346,8 +361,8 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <div className="p-3 md:p-6 lg:p-8 safe-bottom">
-          <div className="max-w-7xl mx-auto pb-24 lg:pb-8">
+        <div className="p-3 md:p-6 lg:p-8 safe-bottom flex-1">
+          <div className="max-w-7xl mx-auto pb-12">
             {activeView === 'dashboard' && <Dashboard state={state} />}
             {activeView === 'transactions' && <TransactionList state={state} onDelete={deleteTransaction} />}
             {activeView === 'charts' && <ChartsView state={state} />}
@@ -355,6 +370,14 @@ const App: React.FC = () => {
             {activeView === 'categories' && <CategoryManager state={state} onUpdate={updateCategories} />}
             {activeView === 'settings' && <SettingsView state={state} onUpdate={updateProfile} />}
           </div>
+
+          {/* App Footer Signature */}
+          <footer className="max-w-7xl mx-auto py-8 text-center border-t border-slate-200">
+            <div className="inline-flex items-center space-x-2 text-slate-300">
+               <InanceLogo className="w-4 h-4" />
+               <span className="text-[10px] font-black uppercase tracking-[0.4em]">Made By Asif</span>
+            </div>
+          </footer>
         </div>
       </main>
 

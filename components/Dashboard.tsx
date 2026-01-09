@@ -64,7 +64,8 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
         return acc;
       }, {} as Record<string, number>);
     return Object.entries(expenseData)
-      .sort((a, b) => b[1] - a[1])
+      // Added explicit number casting for sort arithmetic operation to satisfy TypeScript
+      .sort((a, b) => (b[1] as number) - (a[1] as number))
       .slice(0, 5);
   }, [transactions]);
 
