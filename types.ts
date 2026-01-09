@@ -1,5 +1,4 @@
-
-export type TransactionType = 'income' | 'expense';
+export type TransactionType = 'income' | 'expense' | 'vault_in' | 'vault_out';
 
 export interface Transaction {
   id: string;
@@ -18,12 +17,14 @@ export interface UserProfile {
 export interface Categories {
   income: string[];
   expense: string[];
+  vault: string[];
 }
 
 export interface AppState {
   transactions: Transaction[];
+  vaultTransactions: Transaction[];
   categories: Categories;
   profile: UserProfile;
 }
 
-export type ViewType = 'dashboard' | 'transactions' | 'charts' | 'categories' | 'settings';
+export type ViewType = 'dashboard' | 'transactions' | 'charts' | 'vault' | 'categories' | 'settings';
