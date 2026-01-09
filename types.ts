@@ -1,4 +1,4 @@
-export type TransactionType = 'income' | 'expense' | 'vault_in' | 'vault_out';
+export type TransactionType = 'income' | 'expense' | 'vault_in' | 'vault_out' | 'borrowed';
 
 export interface Transaction {
   id: string;
@@ -7,11 +7,15 @@ export interface Transaction {
   category: string;
   date: string; // ISO string
   description: string;
+  borrowedFrom?: string;
+  repayDate?: string;
 }
 
 export interface UserProfile {
   name: string;
   currency: string;
+  reminderTime: string; // "HH:MM" format
+  notificationsEnabled: boolean;
 }
 
 export interface Categories {

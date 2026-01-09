@@ -8,7 +8,9 @@ export const INITIAL_CATEGORIES: Categories = {
 
 export const INITIAL_PROFILE: UserProfile = {
   name: 'Guest User',
-  currency: '$'
+  currency: '$',
+  reminderTime: '22:00',
+  notificationsEnabled: false
 };
 
 export const CURRENCIES = [

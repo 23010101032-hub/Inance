@@ -1,6 +1,6 @@
+
 import React, { useState, useMemo } from 'react';
 import { AppState, Transaction, TransactionType } from '../types';
-// Fixed: Added missing 'X' import from 'lucide-react'
 import { 
   ShieldCheck, 
   ArrowUpCircle, 
@@ -11,7 +11,10 @@ import {
   Lock,
   Plus,
   Minus,
-  X
+  X,
+  Eye,
+  EyeOff,
+  ShieldAlert
 } from 'lucide-react';
 
 interface VaultViewProps {
@@ -26,6 +29,7 @@ const VaultView: React.FC<VaultViewProps> = ({ state, onAdd, onDelete }) => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState(categories.vault[0]);
   const [description, setDescription] = useState('');
+  const [isSecretVisible, setIsSecretVisible] = useState(false);
 
   const vaultBalance = useMemo(() => {
     return vaultTransactions.reduce((acc, t) => {
@@ -62,15 +66,23 @@ const VaultView: React.FC<VaultViewProps> = ({ state, onAdd, onDelete }) => {
                 <ShieldCheck className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h2 className="text-3xl font-black tracking-tight">Financial Vault</h2>
-                <p className="text-indigo-400 font-bold uppercase tracking-widest text-[10px]">Unusable Assets Pool</p>
+                <h2 className="text-3xl font-black tracking-tight text-white">Financial Vault</h2>
+                <p className="text-indigo-400 font-bold uppercase tracking-widest text-[10px]">Private Assets Registry</p>
               </div>
             </div>
             <div className="pt-2">
-              <p className="text-5xl lg:text-6xl font-black text-white tracking-tighter">
-                {profile.currency}{vaultBalance.toLocaleString()}
-              </p>
-              <p className="text-slate-500 font-medium mt-2 text-sm">Stored securely on your device.</p>
+              <div className="flex items-center gap-4">
+                <p className={`text-5xl lg:text-6xl font-black tracking-tighter transition-all duration-300 ${!isSecretVisible ? 'blur-xl select-none opacity-20' : 'blur-0 opacity-100'}`}>
+                  {isSecretVisible ? `${profile.currency}${vaultBalance.toLocaleString()}` : `${profile.currency} ••••••`}
+                </p>
+                <button 
+                  onClick={() => setIsSecretVisible(!isSecretVisible)}
+                  className="p-3 bg-slate-800 hover:bg-slate-700 rounded-full transition-colors active:scale-90"
+                >
+                  {isSecretVisible ? <EyeOff className="w-6 h-6 text-slate-300" /> : <Eye className="w-6 h-6 text-slate-300" />}
+                </button>
+              </div>
+              <p className="text-slate-500 font-medium mt-2 text-sm italic">Secret data encrypted locally.</p>
             </div>
           </div>
 
@@ -97,7 +109,7 @@ const VaultView: React.FC<VaultViewProps> = ({ state, onAdd, onDelete }) => {
         <div className="bg-white p-8 rounded-[2rem] border-2 border-slate-100 shadow-sm animate-in zoom-in-95">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-slate-800">
-              {showAdd === 'vault_in' ? 'Deposit to Vault' : 'Withdraw from Vault'}
+              {showAdd === 'vault_in' ? 'Deposit (Wallet to Vault)' : 'Withdraw (Vault to Wallet)'}
             </h3>
             <button onClick={() => setShowAdd(null)} className="p-2 text-slate-400 hover:text-slate-600"><X /></button>
           </div>
@@ -143,9 +155,9 @@ const VaultView: React.FC<VaultViewProps> = ({ state, onAdd, onDelete }) => {
             </div>
           </form>
           {showAdd === 'vault_out' && (
-            <p className="mt-4 text-xs font-bold text-rose-500 flex items-center bg-rose-50 p-3 rounded-xl border border-rose-100">
-              <Lock className="w-4 h-4 mr-2" />
-              Deducting money from Vault will automatically create a corresponding Expense entry in your main ledger.
+            <p className="mt-4 text-xs font-bold text-indigo-500 flex items-center bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+              <ShieldAlert className="w-4 h-4 mr-2" />
+              Withdrawing money from the Vault will increase your Usable Balance and create a tracking entry in your main ledger.
             </p>
           )}
         </div>

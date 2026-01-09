@@ -1,4 +1,3 @@
-
 import * as XLSX from 'xlsx';
 import { AppState, Transaction } from '../types';
 
@@ -55,14 +54,15 @@ export function exportToExcel(state: AppState, filteredTransactions?: Transactio
   if (!filteredTransactions) {
     const categoriesData = [
       ...state.categories.income.map(c => ({ Type: 'Income', Name: c })),
-      ...state.categories.expense.map(c => ({ Type: 'Expense', Name: c }))
+      ...state.categories.expense.map(c => ({ Type: 'Expense', Name: c })),
+      ...state.categories.vault.map(c => ({ Type: 'Vault', Name: c }))
     ];
     const catWorksheet = XLSX.utils.json_to_sheet(categoriesData);
     XLSX.utils.book_append_sheet(workbook, catWorksheet, "Category Config");
   }
 
   const label = customLabel || (filteredTransactions ? 'Report' : 'Backup');
-  const fileName = `FinTrack_${label}_${profile.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  const fileName = `Inance_${label}_${profile.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
   XLSX.writeFile(workbook, fileName);
 }
 
@@ -97,7 +97,7 @@ export function exportYearlyReport(state: AppState, year: number) {
     }
   });
 
-  const fileName = `FinTrack_Full_Year_${year}_${profile.name.replace(/\s+/g, '_')}.xlsx`;
+  const fileName = `Inance_Full_Year_${year}_${profile.name.replace(/\s+/g, '_')}.xlsx`;
   XLSX.writeFile(workbook, fileName);
 }
 
@@ -127,7 +127,8 @@ export async function importFromExcel(file: File): Promise<Partial<AppState>> {
           const catRaw: any[] = XLSX.utils.sheet_to_json(catSheet);
           categories = {
             income: catRaw.filter(r => r.Type === 'Income').map(r => r.Name),
-            expense: catRaw.filter(r => r.Type === 'Expense').map(r => r.Name)
+            expense: catRaw.filter(r => r.Type === 'Expense').map(r => r.Name),
+            vault: catRaw.filter(r => r.Type === 'Vault').map(r => r.Name)
           };
         }
 
